@@ -1,0 +1,12 @@
+#rediapp
+ redis:
+         image: redis-server
+         container_name: redis2
+         volumes:
+                 - ../data/redis:/data
+         restart: always
+ app:
+         build: ./
+         expose:
+                 - 8000
+ 

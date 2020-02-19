@@ -1,0 +1,59 @@
+---
+- hosts: all
+  vars:
+          sysctl_settings:
+                  fs.file-max: 1000000
+                  fs.inotify.max_user_watches: 15345
+                  kernel.core_users_pid: 1
+                  net.ipv4.ip_forward: 0
+
+  tasks:
+          - name: Creating user to login
+            user:
+                    name: demo
+                    groups:
+                            - sudo
+                    state: present
+                    shell: /bin/bash
+                    createhome: yes
+                    home: /home/demo
+          - name: set timezone to ASIA/KOLKATA
+            timezone:
+                    name: Asia/Kolkata
+          - name: Installing docker dependencies
+            apt:
+                    name: "{{ docker_package_dependencies + docker_pip_dependencies }}"
+          - name: Add Docker GPG apt Key
+            apt_key:
+               url: https://download.docker.com/linux/ubuntu/gpg
+               state: present
+
+          - name: Add Docker Repository
+            apt_repository:
+                repo: deb https://download.docker.com/linux/ubuntu bionic stable
+                state: present
+
+          - name: Install Docker
+            apt:  update_cache=yes name= "{{ items }}"  state=latest
+            with_items:
+                    - docker-ce
+                    - docker-compose
+
+          - name: deploying docker-compose.yml
+            copy:
+                    src: /home//home/saikrishna/Desktop/ops-interview-task-master/docker-compose.yml
+                    dest: /etc/demo-ops
+                    owner: root
+                    group: root
+                    
+          - name: starting docker deamon
+            service: name=dockerd state=start
+
+
+          - name: set sysctl settings
+            sysctl: sysctl_set=yes reload=yes state=present
+              name="{{ item.key }}"
+              value="{{ item.value}}"
+              with_dict:"{{ systcl_settings}}"
+          
+
